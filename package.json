@@ -1,0 +1,23 @@
+{
+  "name": "apollo-datasource-configurable-rest",
+  "version": "1.0.0",
+  "description": "configurable rest datasource",
+  "main": "index.js",
+  "dependencies": {},
+  "peerDependencies": {
+    "apollo-datasource-rest": "^0.7.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^25.1.2",
+    "apollo-datasource-rest": "^0.7.0",
+    "apollo-server-env": "^2.4.3",
+    "eslint": "^6.8.0",
+    "jest": "^25.1.0",
+    "typescript": "^3.7.5"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
