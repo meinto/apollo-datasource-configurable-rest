@@ -1,14 +1,12 @@
 import { RESTDataSource } from 'apollo-datasource-rest'
-import { URLSearchParams, RequestInit } from 'apollo-server-env'
+import { URLSearchParams, RequestInit, BodyInit } from 'apollo-server-env'
 import { Headers as RequestHeaders } from 'apollo-env'
-
-type MaybeObject<T> = T | Record<string, string>
 
 type PrivateConfig<TParams, THeaders, TBody> = {
   url: string,
-  params: MaybeObject<TParams>,
-  headers: MaybeObject<THeaders>,
-  body: MaybeObject<TBody>,
+  params: TParams,
+  headers: THeaders,
+  body: TBody,
   cacheTime: number,
 }
 
@@ -16,30 +14,32 @@ type RequestInitOptions = {
   cacheTime?: number
 }
 
+type Body = BodyInit | object
+
 export class ConfigurableRESTDataSource<
   TArgs = Record<string, string>,
   TParams = Record<string, string>, 
   THeaders = Record<string, string>, 
-  TBody = Record<string, string>
+  TBody = Body, 
 > extends RESTDataSource {
   private config: PrivateConfig<TParams, THeaders, TBody> = {
     url: '',
-    params: {},
-    headers: {},
-    body: {},
+    params: {} as TParams,
+    headers: {} as THeaders,
+    body: {} as TBody,
     cacheTime: 5,
   }
 
   protected set url(url: string) {
     this.config.url = url
   }
-  protected set params(params: MaybeObject<TParams>) {
+  protected set params(params: TParams) {
     this.config.params = params
   }
-  protected set headers(headers: MaybeObject<THeaders>) {
+  protected set headers(headers: THeaders) {
     this.config.headers = headers
   }
-  protected set body(body: MaybeObject<TBody>) {
+  protected set body(body: TBody) {
     this.config.body = body
   }
   protected set cacheTime(cacheTime: number) {
@@ -49,70 +49,110 @@ export class ConfigurableRESTDataSource<
   protected get url(): string {
     return this.config.url
   }
-  protected get params(): MaybeObject<TParams> {
+  protected get params(): TParams {
     return this.config.params
   }
-  protected get headers(): MaybeObject<THeaders> {
+  protected get headers(): THeaders {
     return this.config.headers
   }
-  protected get body(): MaybeObject<TBody> {
+  protected get body(): TBody {
     return this.config.body
   }
   protected get cacheTime() {
     return this.config.cacheTime
   }
 
-  protected async configuredGET<TResult = any>(args: MaybeObject<TArgs>, options?: RequestInitOptions): Promise<TResult> {
+  public async configuredGET<TResult = any>(args: TArgs, options?: RequestInitOptions): Promise<TResult> {
     return this.get<TResult>(
-      this.url,
+      this.replaceArgsInString(this.url, args),
       this.convertToURLSearchParams(this.params, args),
       this.getRequestInit(args, options),
     )
   }
 
-  protected async configuredPOST<TResult = any>(args: MaybeObject<TArgs>, body?: string): Promise<TResult> {
+  public async configuredDELETE<TResult = any>(args: TArgs, options?: RequestInitOptions): Promise<TResult> {
+    return this.delete<TResult>(
+      this.replaceArgsInString(this.url, args),
+      this.convertToURLSearchParams(this.params, args),
+      this.getRequestInit(args, options),
+    )
+  }
+
+  public async configuredPOST<TResult = any>(args: TArgs, body?: Body): Promise<TResult> {
     return this.post<TResult>(
-      this.url,
-      body,
+      this.replaceArgsInString(this.url, args),
+      this.convertToBody((body || this.body) as Body, args),
       this.getRequestInit(args),
     )
   }
 
-  protected async configuredPUT<TResult = any>(args: MaybeObject<TArgs>, body?: string): Promise<TResult> {
+  public async configuredPUT<TResult = any>(args: TArgs, body?: Body): Promise<TResult> {
     return this.put<TResult>(
-      this.url,
-      body,
+      this.replaceArgsInString(this.url, args),
+      this.convertToBody((body || this.body) as Body, args),
       this.getRequestInit(args),
     )
   }
 
-  private replaceArgsInObject<TObject = Record<string, string>>(obj: TObject, args: MaybeObject<TArgs>): TObject {
-    let str = JSON.stringify(obj)
-    for (const key in (args as Record<string, string>)) {
-      str = str.replace(`$${key}`, (args as Record<string, string>)[key])
+  public async configuredPATCH<TResult = any>(args: TArgs, body?: Body): Promise<TResult> {
+    return this.patch<TResult>(
+      this.replaceArgsInString(this.url, args),
+      this.convertToBody((body || this.body) as Body, args),
+      this.getRequestInit(args),
+    )
+  }
+
+  private replaceArgsInString(str: string, args: TArgs): string {
+    let replaced = str
+    for (const key in args) {
+      const regexp = new RegExp(`\\$${key}`, 'g')
+      replaced = replaced.replace(regexp, this.convertToString(args[key]))
     }
+    return replaced
+  } 
+
+  private replaceArgsInObject<TObject = Record<string, string>>(obj: TObject, args: TArgs): TObject {
+    let str = this.replaceArgsInString(JSON.stringify(obj), args)
     return JSON.parse(str)
   }
 
-  private convertToURLSearchParams(params: MaybeObject<TParams>, args: MaybeObject<TArgs>): URLSearchParams {
-    const paramsWithReplacedArgs = this.replaceArgsInObject<MaybeObject<TParams>>(params, args)
+  private convertToURLSearchParams(params: TParams, args: TArgs): URLSearchParams {
+    const paramsWithReplacedArgs = this.replaceArgsInObject<TParams>(params, args)
     const urlParams = new URLSearchParams()
-    for (const key in (paramsWithReplacedArgs as Record<string, string>)) {
-      urlParams.append(key, (paramsWithReplacedArgs as Record<string, string>)[key])
+    for (const key in paramsWithReplacedArgs) {
+      urlParams.append(key, this.convertToString(paramsWithReplacedArgs[key]))
     }
     return urlParams
   }
 
-  private convertToHeaders(headers: MaybeObject<THeaders>, args: MaybeObject<TArgs>): RequestHeaders {
-    const headersWithReplacedArgs = this.replaceArgsInObject<MaybeObject<THeaders>>(headers, args)
+  private convertToHeaders(headers: THeaders, args: TArgs): RequestHeaders {
+    const headersWithReplacedArgs = this.replaceArgsInObject<THeaders>(headers, args)
     const requestHeaders = new RequestHeaders()
-    for (const key in (headersWithReplacedArgs as Record<string, string>)) {
-      requestHeaders.append(key, (headersWithReplacedArgs as Record<string, string>)[key])
+    for (const key in headersWithReplacedArgs) {
+      requestHeaders.append(key, this.convertToString(headersWithReplacedArgs[key]))
     }
     return requestHeaders
   }
 
-  private getRequestInit(args: MaybeObject<TArgs>, options?: RequestInitOptions): RequestInit {
+  private convertToBody(body: Body, args: TArgs): Body {
+    if (body instanceof String) {
+      return this.replaceArgsInString(body as string, args)
+    }
+    if (body instanceof Object) {
+      return this.replaceArgsInObject(body, args)
+    }
+    return body
+  }
+
+  convertToString(val: string | Object): string {
+    let converted = `${val}`
+    if (val instanceof Object) {
+      converted = JSON.stringify(val)
+    }
+    return converted
+  }
+
+  private getRequestInit(args: TArgs, options?: RequestInitOptions): RequestInit {
     const ttl = (options && options.cacheTime) || this.cacheTime
     return {
       cacheOptions: { ttl },
