@@ -16,6 +16,10 @@ export type RequestInitOptions = {
 
 export type Body = BodyInit | object
 
+// TODO
+// ConfigurableRequest
+// transform functions
+
 export class ConfigurableRESTDataSource<
   TArgs = Record<string, string>,
   TParams = Record<string, string>, 
