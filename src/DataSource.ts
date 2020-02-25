@@ -2,7 +2,7 @@ import { RESTDataSource } from 'apollo-datasource-rest'
 import { URLSearchParams, RequestInit, BodyInit } from 'apollo-server-env'
 import { Headers as RequestHeaders } from 'apollo-env'
 
-type PrivateConfig<TParams, THeaders, TBody> = {
+export type PrivateConfig<TParams, THeaders, TBody> = {
   url: string,
   params: TParams,
   headers: THeaders,
@@ -10,11 +10,11 @@ type PrivateConfig<TParams, THeaders, TBody> = {
   cacheTime: number,
 }
 
-type RequestInitOptions = {
+export type RequestInitOptions = {
   cacheTime?: number
 }
 
-type Body = BodyInit | object
+export type Body = BodyInit | object
 
 export class ConfigurableRESTDataSource<
   TArgs = Record<string, string>,

@@ -2,10 +2,13 @@
   "name": "apollo-datasource-configurable-rest",
   "version": "1.0.0",
   "description": "configurable rest datasource",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "dependencies": {},
   "peerDependencies": {
-    "apollo-datasource-rest": "^0.7.0"
+    "apollo-datasource-rest": "^0.7.0",
+    "apollo-env": "^0.6.1",
+    "apollo-server-env": "^2.4.3"
   },
   "devDependencies": {
     "@types/jest": "^25.1.3",
@@ -13,14 +16,24 @@
     "apollo-datasource-rest": "^0.7.0",
     "apollo-env": "^0.6.1",
     "apollo-server-env": "^2.4.3",
+    "apollo-server-types": "^0.2.10",
     "eslint": "^6.8.0",
+    "graphql": "^14.6.0",
     "jest": "^25.1.0",
     "ts-jest": "^25.2.1",
     "typescript": "^3.8.2"
   },
   "scripts": {
+    "build": "rm -rf ./dist && tsc --declaration",
     "test": "jest"
   },
-  "author": "",
-  "license": "ISC"
+  "keywords": [
+    "apollo",
+    "apollo-server",
+    "autoloader",
+    "graphql",
+    "gql"
+  ],
+  "author": "Tobias Meinhardt",
+  "license": "MIT"
 }
