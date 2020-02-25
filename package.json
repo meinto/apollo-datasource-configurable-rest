@@ -10,6 +10,7 @@
   "devDependencies": {
     "@types/jest": "^25.1.2",
     "apollo-datasource-rest": "^0.7.0",
+    "apollo-env": "^0.6.1",
     "apollo-server-env": "^2.4.3",
     "eslint": "^6.8.0",
     "jest": "^25.1.0",

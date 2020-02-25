@@ -1,13 +1,19 @@
 import { RESTDataSource } from 'apollo-datasource-rest'
-import { URLSearchParams } from 'apollo-server-env'
+import { URLSearchParams, RequestInit } from 'apollo-server-env'
+import { Headers as RequestHeaders } from 'apollo-env'
 
 type MaybeObject<T> = T | Record<string, string>
 
 type PrivateConfig<TParams, THeaders, TBody> = {
-  url: string
-  params: MaybeObject<TParams>
-  headers: MaybeObject<THeaders>
-  body: MaybeObject<TBody>
+  url: string,
+  params: MaybeObject<TParams>,
+  headers: MaybeObject<THeaders>,
+  body: MaybeObject<TBody>,
+  cacheTime: number,
+}
+
+type RequestInitOptions = {
+  cacheTime?: number
 }
 
 export class ConfigurableRESTDataSource<
@@ -21,6 +27,7 @@ export class ConfigurableRESTDataSource<
     params: {},
     headers: {},
     body: {},
+    cacheTime: 5,
   }
 
   protected set url(url: string) {
@@ -35,6 +42,9 @@ export class ConfigurableRESTDataSource<
   protected set body(body: MaybeObject<TBody>) {
     this.config.body = body
   }
+  protected set cacheTime(cacheTime: number) {
+    this.config.cacheTime = cacheTime
+  }
 
   protected get url(): string {
     return this.config.url
@@ -48,6 +58,33 @@ export class ConfigurableRESTDataSource<
   protected get body(): MaybeObject<TBody> {
     return this.config.body
   }
+  protected get cacheTime() {
+    return this.config.cacheTime
+  }
+
+  protected async configuredGET<TResult = any>(args: MaybeObject<TArgs>): Promise<TResult> {
+    return this.get<TResult>(
+      this.url,
+      this.convertToURLSearchParams(this.params, args),
+      this.getRequestInit(args),
+    )
+  }
+
+  protected async configuredPOST<TResult = any>(args: MaybeObject<TArgs>, body?: string): Promise<TResult> {
+    return this.post<TResult>(
+      this.url,
+      body,
+      this.getRequestInit(args),
+    )
+  }
+
+  protected async configuredPUT<TResult = any>(args: MaybeObject<TArgs>, body?: string): Promise<TResult> {
+    return this.put<TResult>(
+      this.url,
+      body,
+      this.getRequestInit(args),
+    )
+  }
 
   private replaceArgsInObject<TObject = Record<string, string>>(obj: TObject, args: MaybeObject<TArgs>): TObject {
     let str = JSON.stringify(obj)
@@ -57,7 +94,7 @@ export class ConfigurableRESTDataSource<
     return JSON.parse(str)
   }
 
-  private toURLSearchParams(params: MaybeObject<TParams>, args: MaybeObject<TArgs>): URLSearchParams {
+  private convertToURLSearchParams(params: MaybeObject<TParams>, args: MaybeObject<TArgs>): URLSearchParams {
     const paramsWithReplacedArgs = this.replaceArgsInObject<MaybeObject<TParams>>(params, args)
     const urlParams = new URLSearchParams()
     for (const key in (paramsWithReplacedArgs as Record<string, string>)) {
@@ -66,24 +103,20 @@ export class ConfigurableRESTDataSource<
     return urlParams
   }
 
-  protected async configuredGET<TResult = any>(args: MaybeObject<TArgs>): Promise<TResult> {
-    return this.get<TResult>(
-      this.url,
-      this.toURLSearchParams(this.params, args),
-    )
+  private convertToHeaders(headers: MaybeObject<THeaders>, args: MaybeObject<TArgs>): RequestHeaders {
+    const headersWithReplacedArgs = this.replaceArgsInObject<MaybeObject<THeaders>>(headers, args)
+    const requestHeaders = new RequestHeaders()
+    for (const key in (headersWithReplacedArgs as Record<string, string>)) {
+      requestHeaders.append(key, (headersWithReplacedArgs as Record<string, string>)[key])
+    }
+    return requestHeaders
   }
 
-  protected async configuredPOST<TResult = any>(args: MaybeObject<TArgs>, body?: string): Promise<TResult> {
-    return this.post<TResult>(
-      this.url,
-      body,
-    )
-  }
-
-  protected async configuredPUT<TResult = any>(args: MaybeObject<TArgs>, body?: string): Promise<TResult> {
-    return this.put<TResult>(
-      this.url,
-      body,
-    )
+  private getRequestInit(args: MaybeObject<TArgs>, options?: RequestInitOptions): RequestInit {
+    const ttl = (options && options.cacheTime) || this.cacheTime
+    return {
+      cacheOptions: { ttl },
+      headers: this.convertToHeaders(this.headers, args)
+    }
   }
 }
