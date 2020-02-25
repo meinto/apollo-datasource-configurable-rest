@@ -62,11 +62,11 @@ export class ConfigurableRESTDataSource<
     return this.config.cacheTime
   }
 
-  protected async configuredGET<TResult = any>(args: MaybeObject<TArgs>): Promise<TResult> {
+  protected async configuredGET<TResult = any>(args: MaybeObject<TArgs>, options?: RequestInitOptions): Promise<TResult> {
     return this.get<TResult>(
       this.url,
       this.convertToURLSearchParams(this.params, args),
-      this.getRequestInit(args),
+      this.getRequestInit(args, options),
     )
   }
 
