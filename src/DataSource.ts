@@ -2,8 +2,9 @@ import { RESTDataSource } from 'apollo-datasource-rest'
 import { URLSearchParams, RequestInit, BodyInit } from 'apollo-server-env'
 import { Headers as RequestHeaders } from 'apollo-env'
 
-export type PrivateConfig<TParams, THeaders, TBody> = {
+export type PrivateConfig<TArgs, TParams, THeaders, TBody> = {
   url: string,
+  defaultArgs: Partial<TArgs>,
   params: TParams,
   headers: THeaders,
   body: TBody,
@@ -16,18 +17,15 @@ export type RequestInitOptions = {
 
 export type Body = BodyInit | object
 
-// TODO
-// ConfigurableRequest
-// transform functions
-
 export class ConfigurableRESTDataSource<
   TArgs = Record<string, string>,
   TParams = Record<string, string>, 
   THeaders = Record<string, string>, 
   TBody = Body, 
 > extends RESTDataSource {
-  private config: PrivateConfig<TParams, THeaders, TBody> = {
+  private config: PrivateConfig<TArgs, TParams, THeaders, TBody> = {
     url: '',
+    defaultArgs: {} as TArgs,
     params: {} as TParams,
     headers: {} as THeaders,
     body: {} as TBody,
@@ -36,6 +34,9 @@ export class ConfigurableRESTDataSource<
 
   protected set url(url: string) {
     this.config.url = url
+  }
+  protected set defaultArgs(args: Partial<TArgs>) {
+    this.config.defaultArgs = args
   }
   protected set params(params: TParams) {
     this.config.params = params
@@ -53,6 +54,9 @@ export class ConfigurableRESTDataSource<
   protected get url(): string {
     return this.config.url
   }
+  protected get defaultArgs(): Partial<TArgs> {
+    return this.config.defaultArgs
+  }
   protected get params(): TParams {
     return this.config.params
   }
@@ -66,44 +70,51 @@ export class ConfigurableRESTDataSource<
     return this.config.cacheTime
   }
 
-  public async configuredGET<TResult = any>(args: TArgs, options?: RequestInitOptions): Promise<TResult> {
+  public async configuredGET<TResult = any>(args: Partial<TArgs>, options?: RequestInitOptions): Promise<TResult> {
     return this.get<TResult>(
-      this.replaceArgsInString(this.url, args),
-      this.convertToURLSearchParams(this.params, args),
-      this.getRequestInit(args, options),
+      this.replaceArgsInString(this.url, this.getArgs(args)),
+      this.convertToURLSearchParams(this.params, this.getArgs(args)),
+      this.getRequestInit(this.getArgs(args), options),
     )
   }
 
-  public async configuredDELETE<TResult = any>(args: TArgs, options?: RequestInitOptions): Promise<TResult> {
+  public async configuredDELETE<TResult = any>(args: Partial<TArgs>, options?: RequestInitOptions): Promise<TResult> {
     return this.delete<TResult>(
-      this.replaceArgsInString(this.url, args),
-      this.convertToURLSearchParams(this.params, args),
-      this.getRequestInit(args, options),
+      this.replaceArgsInString(this.url, this.getArgs(args)),
+      this.convertToURLSearchParams(this.params, this.getArgs(args)),
+      this.getRequestInit(this.getArgs(args), options),
     )
   }
 
-  public async configuredPOST<TResult = any>(args: TArgs, body?: Body): Promise<TResult> {
+  public async configuredPOST<TResult = any>(args: Partial<TArgs>, body?: Body): Promise<TResult> {
     return this.post<TResult>(
-      this.replaceArgsInString(this.url, args),
-      this.convertToBody((body || this.body) as Body, args),
-      this.getRequestInit(args),
+      this.replaceArgsInString(this.url, this.getArgs(args)),
+      this.convertToBody((body || this.body) as Body, this.getArgs(args)),
+      this.getRequestInit(this.getArgs(args)),
     )
   }
 
-  public async configuredPUT<TResult = any>(args: TArgs, body?: Body): Promise<TResult> {
+  public async configuredPUT<TResult = any>(args: Partial<TArgs>, body?: Body): Promise<TResult> {
     return this.put<TResult>(
-      this.replaceArgsInString(this.url, args),
-      this.convertToBody((body || this.body) as Body, args),
-      this.getRequestInit(args),
+      this.replaceArgsInString(this.url, this.getArgs(args)),
+      this.convertToBody((body || this.body) as Body, this.getArgs(args)),
+      this.getRequestInit(this.getArgs(args)),
     )
   }
 
-  public async configuredPATCH<TResult = any>(args: TArgs, body?: Body): Promise<TResult> {
+  public async configuredPATCH<TResult = any>(args: Partial<TArgs>, body?: Body): Promise<TResult> {
     return this.patch<TResult>(
-      this.replaceArgsInString(this.url, args),
-      this.convertToBody((body || this.body) as Body, args),
-      this.getRequestInit(args),
+      this.replaceArgsInString(this.url, this.getArgs(args)),
+      this.convertToBody((body || this.body) as Body, this.getArgs(args)),
+      this.getRequestInit(this.getArgs(args)),
     )
+  }
+
+  private getArgs(args: Partial<TArgs>): TArgs {
+    return {
+      ...this.defaultArgs,
+      ...args,
+    } as TArgs
   }
 
   private replaceArgsInString(str: string, args: TArgs): string {

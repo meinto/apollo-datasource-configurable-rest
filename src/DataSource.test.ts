@@ -15,6 +15,7 @@ jest.mock('apollo-datasource-rest', () => ({
 type Args = {
   arg1: string,
   arg2: string,
+  default: string,
 }
 
 type Params = {
@@ -44,8 +45,12 @@ type Body = {
   },
 }
 
+const defaultArg = 'default argument'
 class TestDatasoursce extends ConfigurableRESTDataSource<Args, Params, Headers, Body> {
-  url = "https://test.url/$arg1/$arg2/$arg2"
+  url = "https://test.url/$arg1/$arg2/$default"
+  defaultArgs = {
+    default: defaultArg,
+  }
   params = {
     param1: "$arg1",
     param2: 22,
@@ -56,7 +61,7 @@ class TestDatasoursce extends ConfigurableRESTDataSource<Args, Params, Headers, 
   }
   headers = {
     header1: "$arg1",
-    header2: "h2",
+    header2: "$default",
     header3: {
       headerField31: "arg2: $arg2",
       headerField32: "headerField32"
@@ -64,7 +69,7 @@ class TestDatasoursce extends ConfigurableRESTDataSource<Args, Params, Headers, 
   }
   body = {
     bodyField1: "$arg2",
-    bodyField2: "b2",
+    bodyField2: "$default",
     bodyField3: {
       bodyField31: "arg2: $arg2",
       bodyField32:"arg2: $arg2",
@@ -82,7 +87,7 @@ describe('ConfigurableRESTDataSource', () => {
     arg2: "mock-arg-2",
   }
 
-  const expectedURL = () => `https://test.url/${args.arg1}/${args.arg2}/${args.arg2}`
+  const expectedURL = () => `https://test.url/${args.arg1}/${args.arg2}/${defaultArg}`
   const expectedParams = () => {
     const params = new URLSearchParams()
     params.append('param1', `${args.arg1}`)
@@ -96,7 +101,7 @@ describe('ConfigurableRESTDataSource', () => {
   const expectedHeaders = () => {
     const headers = new RequestHeaders()
     headers.append('header1', `${args.arg1}`)
-    headers.append('header2', 'h2')
+    headers.append('header2', defaultArg)
     headers.append('header3', JSON.stringify({
       headerField31: `arg2: ${args.arg2}`,
       headerField32: "headerField32"
@@ -105,7 +110,7 @@ describe('ConfigurableRESTDataSource', () => {
   }
   const expectedBody = () => ({
     bodyField1: `${args.arg2}`,
-    bodyField2: "b2",
+    bodyField2: defaultArg,
     bodyField3: {
       bodyField31: `arg2: ${args.arg2}`,
       bodyField32: `arg2: ${args.arg2}`,
