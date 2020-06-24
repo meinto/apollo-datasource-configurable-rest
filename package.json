@@ -4,6 +4,10 @@
   "description": "configurable rest datasource",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/meinto/apollo-datasource-configurable-rest.git"
+  },
   "dependencies": {},
   "peerDependencies": {
     "apollo-datasource-rest": "^0.7.0",
