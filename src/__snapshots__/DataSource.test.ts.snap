@@ -12,8 +12,6 @@ exports[`ConfigurableRESTDataSource datasource with search params calls configur
 
 exports[`ConfigurableRESTDataSource datasource with search params removes search params and headers when the corresponding arguments are not available 1`] = `"https://test.url/$arg1/mock-arg-2/default-argument"`;
 
-exports[`ConfigurableRESTDataSource datasource with search params removes search params when the corresponding arguments are not available 1`] = `"https://test.url/$arg1/mock-arg-2/default-argument"`;
-
 exports[`ConfigurableRESTDataSource datasource without search params calls configuredDELETE with expected args 1`] = `"https://test.url/mock-arg-1/mock-arg-2/default-argument"`;
 
 exports[`ConfigurableRESTDataSource datasource without search params calls configuredGET with expected args 1`] = `"https://test.url/mock-arg-1/mock-arg-2/default-argument"`;
