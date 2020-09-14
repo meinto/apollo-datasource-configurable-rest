@@ -45,8 +45,8 @@ type Body = {
   },
 }
 
-const defaultArg = 'default argument'
-class TestDatasoursce extends ConfigurableRESTDataSource<Args, Params, Headers, Body> {
+const defaultArg = 'default-argument'
+class TestDataSource extends ConfigurableRESTDataSource<Args, Params, Headers, Body> {
   url = "https://test.url/$arg1/$arg2/$default"
   defaultArgs = {
     default: defaultArg,
@@ -78,16 +78,37 @@ class TestDatasoursce extends ConfigurableRESTDataSource<Args, Params, Headers, 
   cacheTime = 5000
 }
 
-describe('ConfigurableRESTDataSource', () => {
+class TestDataSourceWithoutSearchParams extends ConfigurableRESTDataSource<Args, Params, Headers, Body> {
+  url = "https://test.url/$arg1/$arg2/$default"
+  defaultArgs = {
+    default: defaultArg,
+  }
+  headers = {
+    header1: "$arg1",
+    header2: "$default",
+    header3: {
+      headerField31: "arg2: $arg2",
+      headerField32: "headerField32"
+    }
+  }
+  body = {
+    bodyField1: "$arg2",
+    bodyField2: "$default",
+    bodyField3: {
+      bodyField31: "arg2: $arg2",
+      bodyField32:"arg2: $arg2",
+    }
+  }
+  cacheTime = 5000
+}
 
-  const datasource = new TestDatasoursce()
+describe('ConfigurableRESTDataSource', () => {
 
   const args = {
     arg1: "mock-arg-1",
     arg2: "mock-arg-2",
   }
 
-  const expectedURL = () => `https://test.url/${args.arg1}/${args.arg2}/${defaultArg}`
   const expectedParams = () => {
     const params = new URLSearchParams()
     params.append('param1', `${args.arg1}`)
@@ -123,38 +144,81 @@ describe('ConfigurableRESTDataSource', () => {
     }
   }
 
-  it('calls configuredGET with expected args', async () => {
-    const result = await datasource.configuredGET(args)
-    expect(result[0]).toEqual(expectedURL())
-    expect(result[1]).toEqual(expectedParams())
-    expect(result[2]).toEqual(expectedRequestInit())
+  describe('datasource with search params', () => {
+    const datasource = new TestDataSource()
+
+    it('calls configuredGET with expected args', async () => {
+      const result = await datasource.configuredGET(args)
+      expect(result[0]).toMatchSnapshot()
+      expect(result[1]).toEqual(expectedParams())
+      expect(result[2]).toEqual(expectedRequestInit())
+    })
+
+    it('calls configuredDELETE with expected args', async () => {
+      const result = await datasource.configuredDELETE(args)
+      expect(result[0]).toMatchSnapshot()
+      expect(result[1]).toEqual(expectedParams())
+      expect(result[2]).toEqual(expectedRequestInit())
+    })
+
+    it('calls configuredPOST with expected args', async () => {
+      const result = await datasource.configuredPOST(args)
+      expect(result[0]).toMatchSnapshot()
+      expect(result[1]).toEqual(expectedBody())
+      expect(result[2]).toEqual(expectedRequestInit())
+    })
+
+    it('calls configuredPUT with expected args', async () => {
+      const result = await datasource.configuredPUT(args)
+      expect(result[0]).toMatchSnapshot()
+      expect(result[1]).toEqual(expectedBody())
+      expect(result[2]).toEqual(expectedRequestInit())
+    })
+
+    it('calls configuredPATCH with expected args', async () => {
+      const result = await datasource.configuredPATCH(args)
+      expect(result[0]).toMatchSnapshot()
+      expect(result[1]).toEqual(expectedBody())
+      expect(result[2]).toEqual(expectedRequestInit())
+    })
   })
 
-  it('calls configuredDELETE with expected args', async () => {
-    const result = await datasource.configuredDELETE(args)
-    expect(result[0]).toEqual(expectedURL())
-    expect(result[1]).toEqual(expectedParams())
-    expect(result[2]).toEqual(expectedRequestInit())
-  })
+  describe('datasource without search params', () => {
+    const datasource = new TestDataSourceWithoutSearchParams()
 
-  it('calls configuredPOST with expected args', async () => {
-    const result = await datasource.configuredPOST(args)
-    expect(result[0]).toEqual(expectedURL())
-    expect(result[1]).toEqual(expectedBody())
-    expect(result[2]).toEqual(expectedRequestInit())
-  })
+    it('calls configuredGET with expected args', async () => {
+      const result = await datasource.configuredGET(args)
+      expect(result[0]).toMatchSnapshot()
+      expect(result[1]).toEqual(new URLSearchParams())
+      expect(result[2]).toEqual(expectedRequestInit())
+    })
 
-  it('calls configuredPUT with expected args', async () => {
-    const result = await datasource.configuredPUT(args)
-    expect(result[0]).toEqual(expectedURL())
-    expect(result[1]).toEqual(expectedBody())
-    expect(result[2]).toEqual(expectedRequestInit())
-  })
+    it('calls configuredDELETE with expected args', async () => {
+      const result = await datasource.configuredDELETE(args)
+      expect(result[0]).toMatchSnapshot()
+      expect(result[1]).toEqual(new URLSearchParams())
+      expect(result[2]).toEqual(expectedRequestInit())
+    })
 
-  it('calls configuredPATCH with expected args', async () => {
-    const result = await datasource.configuredPATCH(args)
-    expect(result[0]).toEqual(expectedURL())
-    expect(result[1]).toEqual(expectedBody())
-    expect(result[2]).toEqual(expectedRequestInit())
+    it('calls configuredPOST with expected args', async () => {
+      const result = await datasource.configuredPOST(args)
+      expect(result[0]).toMatchSnapshot()
+      expect(result[1]).toEqual(expectedBody())
+      expect(result[2]).toEqual(expectedRequestInit())
+    })
+
+    it('calls configuredPUT with expected args', async () => {
+      const result = await datasource.configuredPUT(args)
+      expect(result[0]).toMatchSnapshot()
+      expect(result[1]).toEqual(expectedBody())
+      expect(result[2]).toEqual(expectedRequestInit())
+    })
+
+    it('calls configuredPATCH with expected args', async () => {
+      const result = await datasource.configuredPATCH(args)
+      expect(result[0]).toMatchSnapshot()
+      expect(result[1]).toEqual(expectedBody())
+      expect(result[2]).toEqual(expectedRequestInit())
+    })
   })
 })

@@ -87,24 +87,30 @@ export class ConfigurableRESTDataSource<
   }
 
   public async configuredPOST<TResult = any>(args: Partial<TArgs>, body?: Body): Promise<TResult> {
+    const url = new URL(this.replaceArgsInString(this.url, this.getArgs(args)))
+    url.search = this.convertToURLSearchParams(this.params, this.getArgs(args)).toString()
     return this.post<TResult>(
-      this.replaceArgsInString(this.url, this.getArgs(args)),
+      url.toString(),
       this.convertToBody((body || this.body) as Body, this.getArgs(args)),
       this.getRequestInit(this.getArgs(args)),
     )
   }
 
   public async configuredPUT<TResult = any>(args: Partial<TArgs>, body?: Body): Promise<TResult> {
+    const url = new URL(this.replaceArgsInString(this.url, this.getArgs(args)))
+    url.search = this.convertToURLSearchParams(this.params, this.getArgs(args)).toString()
     return this.put<TResult>(
-      this.replaceArgsInString(this.url, this.getArgs(args)),
+      url.toString(),
       this.convertToBody((body || this.body) as Body, this.getArgs(args)),
       this.getRequestInit(this.getArgs(args)),
     )
   }
 
   public async configuredPATCH<TResult = any>(args: Partial<TArgs>, body?: Body): Promise<TResult> {
+    const url = new URL(this.replaceArgsInString(this.url, this.getArgs(args)))
+    url.search = this.convertToURLSearchParams(this.params, this.getArgs(args)).toString()
     return this.patch<TResult>(
-      this.replaceArgsInString(this.url, this.getArgs(args)),
+      url.toString(),
       this.convertToBody((body || this.body) as Body, this.getArgs(args)),
       this.getRequestInit(this.getArgs(args)),
     )

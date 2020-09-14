@@ -29,7 +29,8 @@
   },
   "scripts": {
     "build": "rm -rf ./dist && tsc --declaration",
-    "test": "jest"
+    "test": "jest",
+    "test:watch": "jest --watch"
   },
   "keywords": [
     "apollo",
