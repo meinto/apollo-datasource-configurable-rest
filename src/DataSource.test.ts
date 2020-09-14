@@ -137,15 +137,39 @@ describe('ConfigurableRESTDataSource', () => {
       bodyField32: `arg2: ${args.arg2}`,
     }
   })
-  const expectedRequestInit = () => {
+  const expectedRequestInit = (headers = expectedHeaders()) => {
     return {
       cacheOptions: { ttl: 5000 },
-      headers: expectedHeaders(),
+      headers,
     }
   }
 
   describe('datasource with search params', () => {
     const datasource = new TestDataSource()
+
+    it('removes search params and headers when the corresponding arguments are not available', async () => {
+      const clonedArgs = {...args}
+      delete clonedArgs.arg1
+      const result = await datasource.configuredGET(clonedArgs)
+
+      const params = new URLSearchParams()
+      params.append('param2', '22')
+      params.append('param3', JSON.stringify({
+        param31: `${args.arg2}`,
+        param32: 33,
+      }))
+      
+      const headers = new RequestHeaders()
+      headers.append('header2', defaultArg)
+      headers.append('header3', JSON.stringify({
+        headerField31: `arg2: ${args.arg2}`,
+        headerField32: "headerField32"
+      }))
+
+      expect(result[0]).toMatchSnapshot()
+      expect(result[1]).toEqual(params)
+      expect(result[2]).toEqual(expectedRequestInit(headers))
+    })
 
     it('calls configuredGET with expected args', async () => {
       const result = await datasource.configuredGET(args)

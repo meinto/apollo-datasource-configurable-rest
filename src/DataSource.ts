@@ -141,7 +141,8 @@ export class ConfigurableRESTDataSource<
     const paramsWithReplacedArgs = this.replaceArgsInObject<TParams>(params, args)
     const urlParams = new URLSearchParams()
     for (const key in paramsWithReplacedArgs) {
-      urlParams.append(key, this.convertToString(paramsWithReplacedArgs[key]))
+      const convertedValue = this.convertToString(paramsWithReplacedArgs[key])
+      if (convertedValue.indexOf('$') === -1) urlParams.append(key, convertedValue)
     }
     return urlParams
   }
@@ -150,7 +151,8 @@ export class ConfigurableRESTDataSource<
     const headersWithReplacedArgs = this.replaceArgsInObject<THeaders>(headers, args)
     const requestHeaders = new RequestHeaders()
     for (const key in headersWithReplacedArgs) {
-      requestHeaders.append(key, this.convertToString(headersWithReplacedArgs[key]))
+      const convertedValue = this.convertToString(headersWithReplacedArgs[key])
+      if (convertedValue.indexOf('$') === -1) requestHeaders.append(key, convertedValue)
     }
     return requestHeaders
   }
