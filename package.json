@@ -1,6 +1,6 @@
 {
   "name": "apollo-datasource-configurable-rest",
-  "version": "1.1.4",
+  "version": "1.2.0",
   "description": "configurable rest datasource",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
